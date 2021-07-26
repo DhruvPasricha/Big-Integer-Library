@@ -83,9 +83,6 @@ public:
     }
     // arithematic operators (+ - * / %) [end]
 
-    // Math functions (gcd/lcm fibonacci factorial)[start]
-    // Math functions (gcd/lcm fibonacci factorial)[start]
-
 private:
     // arithematic operations performed using string [start]
     string add(const string &a, const string &b)
@@ -127,3 +124,41 @@ private:
     }
     // arithematic operations performed using string [end]
 };
+
+// Math functions (gcd/lcm fibonacci factorial)[start]
+namespace MathFunctions
+{
+
+    bigint fibbnacci(int n)
+    {
+        bigint res;
+
+        switch (n)
+        {
+        case 0:
+            res = "0";
+            break;
+        case 1:
+            res = "1";
+            break;
+        default:
+            bigint t1;
+            bigint t2;
+            t1 = "0";
+            t2 = "1";
+            res = "1";
+            int currentTerm = 1;
+            while (currentTerm < n)
+            {
+                res = t1 + t2;
+                t2 = t1;
+                t1 = res;
+                currentTerm++;
+            }
+        }
+
+        return res;
+    }
+
+}
+// Math functions (gcd/lcm fibonacci factorial)[end]
