@@ -1,90 +1,182 @@
 #include <iostream>
 #include <algorithm>
+#include <assert.h>
+
 using namespace std;
 
 class bigint
 {
 
 private:
-    // data members [start]
+    //-----------------------------DATA MEMBERS-------------------------------//
+
     string num;
-    // data members [end]
+    bool isNeg;
+
+    //-----------------------------------------------------------------------//
+
+    //-------------------------VALIDITY AND CONVERSION-----------------------//
+
+    bool isDigit(char ch)
+    {
+        return '0' <= ch and ch <= '9';
+    }
+
+    bool isValid(string num)
+    {
+        switch (num[0])
+        {
+        case '+':
+            break;
+        case '-':
+            break;
+        default:
+            if (!isDigit(num[0]))
+                return false;
+        }
+        int i = 1;
+        while (i < num.length())
+        {
+            if (!isDigit(num[i]))
+                return false;
+            i++;
+        }
+        return true;
+    }
+
+    bigint convert(string num)
+    {
+
+        bigint b;
+        b.isNeg = (num[0] == '-');
+
+        int i = num[0] == '-' or num[0] == '+';
+
+        while (i < num.length() and num[i] == '0')
+            i++;
+
+        b.num = num.substr(i);
+
+        if (b.num == "")
+            b.num += '0';
+
+        return b;
+    }
+    //-----------------------------------------------------------------------//
 
 public:
-    // constructors [start]
-    bigint() // default constructor
+    //-----------------------------CONSTRUCTORS-------------------------------//
+    bigint()
     {
         this->num = "";
+        this->isNeg = false;
     }
-    bigint(const bigint &b) // copy constructor
+    bigint(string num)
     {
-        this->num = b.num;
-    }
-    bigint(string num) // parameterised constructor
-    {
-        this->num = num;
-    }
-    // constructors [end]
+        assert(isValid(num));
 
-    // input/output operators (>> <<) [start]
+        *this = convert(num);
+    }
+    //------------------------------------------------------------------------//
+
+    //-------------------------INPUT/OUTPUT OPERATORS-------------------------//
     friend istream &operator>>(istream &input, bigint &b)
     {
-        input >> b.num;
+        string s;
+        input >> s;
+        assert(b.isValid(s));
+        b = b.convert(s);
         return input;
     }
     friend ostream &operator<<(ostream &output, const bigint &b)
     {
-        output << b.num;
+        if (b.isNeg)
+            output << "-" << b.num;
+        else
+            output << b.num;
         return output;
     }
-    // input/output operators (>> <<) [end]
+    //------------------------------------------------------------------------//
 
-    // assignment operator [start]
+    //-------------------------ASSIGNMENT OPERATORS--------------------------//
     void operator=(const bigint &b)
     {
         this->num = b.num;
+        this->isNeg = b.isNeg;
     }
     void operator=(const string &num)
     {
-        this->num = num;
+        assert(isValid(num));
+        *this = convert(num);
     }
-    // assignment operator [end]
+    //------------------------------------------------------------------------//
 
-    // arithematic operators (+ - * / %) [start]
+    //-------------------------ARITHEMATIC OPERATORS--------------------------//
     bigint operator+(const bigint &b)
     {
+        bool differentSigns = (b.isNeg ^ this->isNeg);
         bigint result;
-        result.num = add(this->num, b.num);
-        return result;
+
+        if (differentSigns)
+        {
+            if (b.isNeg)
+                result = convert(subtract(this->num, b.num));
+            else
+                result = convert(subtract(b.num, this->num));
+        }
+        else
+        {
+            result = convert(add(this->num, b.num));
+            result.isNeg = (this->isNeg and b.isNeg);
+            return result;
+        }
     }
     bigint operator-(const bigint &b)
     {
+        bool differentSigns = (b.isNeg ^ this->isNeg);
         bigint result;
-        result.num = subtract(this->num, b.num);
-        return result;
+
+        if (differentSigns)
+        {
+            if (b.isNeg)
+                result = convert(add(this->num, b.num));
+            else
+            {
+                result = convert(add(b.num, this->num));
+                result.isNeg = true;
+            }
+        }
+        else
+        {
+            if (!this->isNeg and !b.isNeg)
+                result = convert(add(this->num, b.num));
+            else
+                result = convert(subtract(b.num, this->num));
+            return result;
+        }
     }
     bigint operator*(const bigint &b)
     {
         bigint result;
-        result.num = multiply(this->num, b.num);
+        result = convert(multiply(this->num, b.num));
         return result;
     }
     bigint operator/(const bigint &b)
     {
         bigint result;
-        result.num = divide(this->num, b.num);
+        result = convert(divide(this->num, b.num));
         return result;
     }
     bigint operator%(const bigint &b)
     {
         bigint result;
-        result.num = modulo(this->num, b.num);
+        result = convert(modulo(this->num, b.num));
         return result;
     }
-    // arithematic operators (+ - * / %) [end]
+    //------------------------------------------------------------------------//
 
 private:
-    // arithematic operations performed using string [start]
+    //-----------------------------ADDITION-----------------------------------//
     string add(const string &a, const string &b)
     {
         string res = "";
@@ -108,11 +200,52 @@ private:
             length2--;
         }
         reverse(res.begin(), res.end());
+
         return res;
     }
-    string subtract(const string &a, const string &b)
+    //-----------------------------------------------------------------------//
+
+    //-----------------------------SUBTRACTION-------------------------------//
+    string subtract(string a, string b)
     {
+        if (a.length() < b.length() or (a.length() == b.length() and a < b))
+        {
+            return '-' + subtract(b, a);
+        }
+
+        string res = "";
+
+        int length1 = a.length();
+        int length2 = b.length();
+
+        while (length1 > 0 or length2 > 0)
+        {
+            int currentDigit1 = a[length1 - 1] - '0';
+            int currentDigit2 = (length2 > 0) ? b[length2 - 1] - '0' : 0;
+
+            if (currentDigit2 > currentDigit1)
+            {
+                int i = length1 - 2;
+                while (i >= 0 and a[i] == '0')
+                {
+                    a[i] = '9';
+                    i--;
+                }
+                if (i >= 0)
+                    a[i]--;
+                currentDigit1 += 10;
+            }
+
+            int currentDigit = currentDigit1 - currentDigit2;
+            res += (char)(currentDigit + '0');
+
+            length1--;
+            length2--;
+        }
+        reverse(res.begin(), res.end());
+        return res;
     }
+    //-----------------------------------------------------------------------//
     string multiply(const string &a, const string &b)
     {
     }
@@ -122,10 +255,9 @@ private:
     string modulo(const string &a, const string &b)
     {
     }
-    // arithematic operations performed using string [end]
 };
 
-// Math functions (gcd/lcm fibonacci factorial)[start]
+//----------------------MATH FUNCTIONS-----------------------------------//
 namespace MathFunctions
 {
 
@@ -161,4 +293,4 @@ namespace MathFunctions
     }
 
 }
-// Math functions (gcd/lcm fibonacci factorial)[end]
+//-----------------------------------------------------------------------//
