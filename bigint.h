@@ -1,5 +1,6 @@
 #include <iostream>
 #include <algorithm>
+#include <vector>
 #include <assert.h>
 
 using namespace std;
@@ -199,6 +200,8 @@ private:
             res += '0';
         return res;
     }
+    //-----------------------------------------------------------------------//
+
     //-----------------------------ADDITION-----------------------------------//
     string add(const string &a, const string &b)
     {
@@ -228,7 +231,7 @@ private:
     }
     //-----------------------------------------------------------------------//
 
-    //-----------------------------SUBTRACTION-------------------------------//
+    //-----------------------------SUBTRACTION--------------------------------//
     string subtract(string a, string b)
     {
         if (a.length() < b.length() or (a.length() == b.length() and a < b))
@@ -269,6 +272,8 @@ private:
         return res;
     }
     //-----------------------------------------------------------------------//
+
+    //-----------------------------MULTIPLICATION----------------------------//
     string multiply(const string &a, const string &b)
     {
         bigint res;
@@ -277,6 +282,8 @@ private:
 
         return res.num;
     }
+    //----------------------------------------------------------------------//
+
     string divide(const string &a, const string &b)
     {
     }
@@ -289,8 +296,16 @@ private:
 namespace MathFunctions
 {
 
-    bigint fibbnacci(int n)
+    bigint fibonacci(int n)
     {
+        static vector<bigint> Fib(2);
+
+        Fib[0] = (bigint) "0";
+        Fib[1] = (bigint) "1";
+
+        if (n < Fib.size())
+            return Fib[n];
+
         bigint res;
 
         switch (n)
@@ -304,19 +319,34 @@ namespace MathFunctions
         default:
             bigint t1;
             bigint t2;
-            t1 = "0";
-            t2 = "1";
-            res = "1";
-            int currentTerm = 1;
+            t1 = Fib[Fib.size() - 2];
+            t2 = Fib[Fib.size() - 1];
+            int currentTerm = Fib.size() - 1;
             while (currentTerm < n)
             {
                 res = t1 + t2;
                 t2 = t1;
                 t1 = res;
                 currentTerm++;
+                Fib.emplace_back(res);
             }
         }
 
+        return res;
+    }
+
+    bigint factorial(int n)
+    {
+        static vector<bigint> Fact(1);
+        Fact[0] = (bigint) "1";
+        if (n < Fact.size())
+            return Fact[n];
+        bigint res = Fact.back();
+        for (int i = Fact.size(); i <= n; i++)
+        {
+            res = res * (bigint)(to_string(i));
+            Fact.emplace_back(res);
+        }
         return res;
     }
 
