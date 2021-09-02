@@ -10,8 +10,8 @@ class bigint
 private:
     //-----------------------------DATA MEMBERS-------------------------------//
 
-    string num;
-    bool isNeg;
+    string num = "0";
+    bool isNeg = false;
 
     //-----------------------------------------------------------------------//
 
@@ -149,7 +149,7 @@ public:
         else
         {
             if (!this->isNeg and !b.isNeg)
-                result = convert(add(this->num, b.num));
+                result = convert(subtract(this->num, b.num));
             else
                 result = convert(subtract(b.num, this->num));
             return result;
@@ -159,6 +159,7 @@ public:
     {
         bigint result;
         result = convert(multiply(this->num, b.num));
+        result.isNeg = this->isNeg ^ b.isNeg;
         return result;
     }
     bigint operator/(const bigint &b)
@@ -176,6 +177,28 @@ public:
     //------------------------------------------------------------------------//
 
 private:
+    //-----------------------------DIGIT X STRING-----------------------------//
+    string digitCrossString(int digit, const string &s, int placeValue)
+    {
+        string res = "";
+        int current = 0;
+        int carry = 0;
+        for (int i = (int)s.length() - 1; i >= 0; i--)
+        {
+            int strDigit = s[i] - '0';
+            current = (strDigit * digit) + carry;
+            res += ((current % 10) + '0');
+            carry = current / 10;
+        }
+        if (carry != 0)
+            res += (carry + '0');
+
+        reverse(res.begin(), res.end());
+
+        while (placeValue--)
+            res += '0';
+        return res;
+    }
     //-----------------------------ADDITION-----------------------------------//
     string add(const string &a, const string &b)
     {
@@ -248,6 +271,11 @@ private:
     //-----------------------------------------------------------------------//
     string multiply(const string &a, const string &b)
     {
+        bigint res;
+        for (int i = 0; i < a.length(); i++)
+            res = res + digitCrossString(a[i] - '0', b, (int)a.length() - i - 1);
+
+        return res.num;
     }
     string divide(const string &a, const string &b)
     {
