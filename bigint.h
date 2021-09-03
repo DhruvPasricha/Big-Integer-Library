@@ -112,6 +112,30 @@ public:
     }
     //------------------------------------------------------------------------//
 
+    //-------------------------COMPARISON OPERATORS--------------------------//
+    bool operator>(const bigint &b)
+    {
+
+        if (this->num.length() > b.num.length())
+            return true;
+        else if (this->num.length() < b.num.length())
+            return false;
+
+        return this->num > b.num;
+    }
+    bool operator>=(const bigint &b)
+    {
+        return *(this) > b or this->num >= b.num;
+    }
+    bool operator<(const bigint &b)
+    {
+        return !(*this >= b);
+    }
+    bool operator<=(const bigint &b)
+    {
+        return !(*this > b);
+    }
+    //----------------------------------------------------------------------//
     //-------------------------ARITHEMATIC OPERATORS--------------------------//
     bigint operator+(const bigint &b)
     {
@@ -165,8 +189,10 @@ public:
     }
     bigint operator/(const bigint &b)
     {
+        assert(b.num != "0");
         bigint result;
         result = convert(divide(this->num, b.num));
+        result.isNeg = (result.num != "0" and (this->isNeg ^ b.isNeg));
         return result;
     }
     bigint operator%(const bigint &b)
@@ -198,6 +224,34 @@ private:
 
         while (placeValue--)
             res += '0';
+        return res;
+    }
+    //-----------------------------------------------------------------------//
+
+    //-----------------------------STRING / 2--------------------------------//
+    string divideBy2(bigint x)
+    {
+        int current = 0;
+        string res = "";
+        for (int i = 0; i < x.num.length(); i++)
+        {
+            current = current * 10 + (x.num[i] - '0');
+
+            if (current < 2)
+            {
+                if (i > 0)
+                {
+                    res += '0';
+                }
+            }
+            else
+            {
+                res += ((current / 2) + '0');
+                current = current % 2;
+            }
+        }
+        if (res.size() == 0)
+            return "0";
         return res;
     }
     //-----------------------------------------------------------------------//
@@ -284,9 +338,27 @@ private:
     }
     //----------------------------------------------------------------------//
 
+    //-----------------------------DIVISION----------------------------//
     string divide(const string &a, const string &b)
     {
+        if (b == "1")
+            return a;
+        bigint l;
+        bigint r = (bigint)(a);
+        bigint one = (bigint) "1";
+        while (r - l > one)
+        {
+            bigint m = divideBy2(l + r);
+
+            if (m * b <= (bigint)a)
+                l = m;
+            else
+                r = m;
+        }
+        return l.num;
     }
+    //----------------------------------------------------------------------//
+
     string modulo(const string &a, const string &b)
     {
     }
