@@ -199,6 +199,7 @@ public:
     {
         bigint result;
         result = convert(modulo(this->num, b.num));
+        result.isNeg = this->isNeg;
         return result;
     }
     //------------------------------------------------------------------------//
@@ -361,6 +362,11 @@ private:
 
     string modulo(const string &a, const string &b)
     {
+
+        bigint a_ = (bigint)(a);
+        bigint b_ = (bigint)(b);
+
+        return (a_ - ((a_ / b_) * b_)).num;
     }
 };
 
