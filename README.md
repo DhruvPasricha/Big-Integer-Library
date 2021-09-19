@@ -25,7 +25,7 @@
     - ## To Use it locally
        - ### Clone this repository and place [bigint.h](./bigint.h) in same path as of your project.
        - ### Just add these two lines at the start of your file
-         - ### #include< "bigint.h" >
+         - ### #include "bigint.h" 
          - ### using namespace MathFunctions;
   - ## Step 2
     - ### Now we can use all of the above features for Big Integers
