@@ -485,5 +485,34 @@ namespace MathFunctions
         return res;
     }
 
+    bigint gcd(bigint a, bigint b)
+    {
+        if (b == (bigint) "0")
+            return a;
+
+        return gcd(b, a % b);
+    }
+
+    bigint lcm(bigint a, bigint b)
+    {
+        return a * (b / gcd(a, b));
+    }
+
+    bigint pow(bigint x, bigint n)
+    {
+        bigint ans;
+        ans = "1";
+        while (n > (bigint)("0"))
+        {
+            bool setBit = (n % (bigint)("2") == (bigint) "1");
+            if (setBit)
+                ans = ans * x;
+            x = x * x;
+
+            n = n / (bigint)("2");
+        }
+        return ans;
+    }
+
 }
 //-----------------------------------------------------------------------//
