@@ -2,7 +2,8 @@
 #include <algorithm>
 #include <vector>
 #include <assert.h>
-
+#include <math.h>
+#include <complex>
 using namespace std;
 
 class bigint
@@ -135,6 +136,14 @@ public:
     {
         return !(*this > b);
     }
+    bool operator==(const bigint &b)
+    {
+        return this->num == b.num and this->isNeg == b.isNeg;
+    }
+    bool operator!=(const bigint &b)
+    {
+        return !((*this) == b);
+    }
     //----------------------------------------------------------------------//
     //-------------------------ARITHEMATIC OPERATORS--------------------------//
     bigint operator+(const bigint &b)
@@ -205,30 +214,6 @@ public:
     //------------------------------------------------------------------------//
 
 private:
-    //-----------------------------DIGIT X STRING-----------------------------//
-    string digitCrossString(int digit, const string &s, int placeValue)
-    {
-        string res = "";
-        int current = 0;
-        int carry = 0;
-        for (int i = (int)s.length() - 1; i >= 0; i--)
-        {
-            int strDigit = s[i] - '0';
-            current = (strDigit * digit) + carry;
-            res += ((current % 10) + '0');
-            carry = current / 10;
-        }
-        if (carry != 0)
-            res += (carry + '0');
-
-        reverse(res.begin(), res.end());
-
-        while (placeValue--)
-            res += '0';
-        return res;
-    }
-    //-----------------------------------------------------------------------//
-
     //-----------------------------STRING / 2--------------------------------//
     string divideBy2(bigint x)
     {
@@ -329,14 +314,96 @@ private:
     //-----------------------------------------------------------------------//
 
     //-----------------------------MULTIPLICATION----------------------------//
+
+    using cd = complex<double>;
+    const double PI = acos(-1);
+
+    void fft(vector<cd> &a, bool invert)
+    {
+        int n = a.size();
+        if (n == 1)
+            return;
+
+        vector<cd> a0(n / 2), a1(n / 2);
+        for (int i = 0; 2 * i < n; i++)
+        {
+            a0[i] = a[2 * i];
+            a1[i] = a[2 * i + 1];
+        }
+        fft(a0, invert);
+        fft(a1, invert);
+
+        double ang = 2 * PI / n * (invert ? -1 : 1);
+        cd w(1), wn(cos(ang), sin(ang));
+        for (int i = 0; 2 * i < n; i++)
+        {
+            a[i] = a0[i] + w * a1[i];
+            a[i + n / 2] = a0[i] - w * a1[i];
+            if (invert)
+            {
+                a[i] /= 2;
+                a[i + n / 2] /= 2;
+            }
+            w *= wn;
+        }
+    }
+
+    string multiplyFFT(const string &a, const string &b)
+    {
+        int n1 = a.size();
+        int n2 = b.size();
+        int n = 1;
+
+        while (n < n1 + n2)
+            n <<= 1;
+        vector<cd> A(n);
+        vector<cd> B(n);
+
+        for (int i = 0, j = n1 - 1, k = n2 - 1; i < n; i++, j--, k--)
+        {
+            double a_ = (j >= 0) ? a[j] - '0' : 0;
+            double b_ = (k >= 0) ? b[k] - '0' : 0;
+
+            A[i] = {a_, 0.0};
+            B[i] = {b_, 0.0};
+        }
+
+        fft(A, false);
+        fft(B, false);
+
+        vector<cd> C(n);
+        for (int i = 0; i < n; i++)
+            C[i] = A[i] * B[i];
+
+        fft(C, true);
+
+        vector<int> Ans(n);
+        for (int i = 0; i < n - 1; i++)
+            Ans[n - i - 1] = round(C[i].real());
+
+        for (int i = n - 1; i > 0; i--)
+        {
+            Ans[i - 1] += Ans[i] / 10;
+            Ans[i] %= 10;
+        }
+
+        string ans = "";
+        ans.reserve(n + 1);
+        int i = 0;
+
+        while (i < n and Ans[i] == 0)
+            i++;
+        while (i < n)
+            ans += to_string(Ans[i++]);
+
+        return ans;
+    }
+
     string multiply(const string &a, const string &b)
     {
-        bigint res;
-        for (int i = 0; i < a.length(); i++)
-            res = res + digitCrossString(a[i] - '0', b, (int)a.length() - i - 1);
-
-        return res.num;
+        return multiplyFFT(a, b);
     }
+
     //----------------------------------------------------------------------//
 
     //-----------------------------DIVISION----------------------------//
@@ -376,13 +443,6 @@ namespace MathFunctions
 
     bigint fibonacci(int n)
     {
-        static vector<bigint> Fib(2);
-
-        Fib[0] = (bigint) "0";
-        Fib[1] = (bigint) "1";
-
-        if (n < Fib.size())
-            return Fib[n];
 
         bigint res;
 
@@ -397,16 +457,17 @@ namespace MathFunctions
         default:
             bigint t1;
             bigint t2;
-            t1 = Fib[Fib.size() - 2];
-            t2 = Fib[Fib.size() - 1];
-            int currentTerm = Fib.size() - 1;
+
+            t2 = "0";
+            t1 = "1";
+
+            int currentTerm = 1;
             while (currentTerm < n)
             {
                 res = t1 + t2;
                 t2 = t1;
                 t1 = res;
                 currentTerm++;
-                Fib.emplace_back(res);
             }
         }
 
@@ -415,15 +476,11 @@ namespace MathFunctions
 
     bigint factorial(int n)
     {
-        static vector<bigint> Fact(1);
-        Fact[0] = (bigint) "1";
-        if (n < Fact.size())
-            return Fact[n];
-        bigint res = Fact.back();
-        for (int i = Fact.size(); i <= n; i++)
+
+        bigint res("1");
+        for (int i = 2; i <= n; i++)
         {
             res = res * (bigint)(to_string(i));
-            Fact.emplace_back(res);
         }
         return res;
     }
