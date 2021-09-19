@@ -79,6 +79,10 @@ public:
 
         *this = convert(num);
     }
+    bigint(int num)
+    {
+        *this = to_string(num);
+    }
     //------------------------------------------------------------------------//
 
     //-------------------------INPUT/OUTPUT OPERATORS-------------------------//
@@ -110,6 +114,11 @@ public:
     {
         assert(isValid(num));
         *this = convert(num);
+    }
+    void operator=(const int &num)
+    {
+        string x = to_string(num);
+        *this = x;
     }
     //------------------------------------------------------------------------//
 
@@ -489,7 +498,7 @@ namespace MathFunctions
     {
         if (b == (bigint) "0")
             return a;
-
+    
         return gcd(b, a % b);
     }
 
