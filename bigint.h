@@ -1,3 +1,6 @@
+#ifndef BIGINT
+#define BIGINT
+
 #include <iostream>
 #include <algorithm>
 #include <vector>
@@ -525,3 +528,5 @@ namespace MathFunctions
 
 }
 //-----------------------------------------------------------------------//
+
+#endif
